@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 // Get user profile
 exports.getProfile = async (req, res) => {
   try {
+    // req.user is set by the middleware
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

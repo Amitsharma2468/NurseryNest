@@ -19,7 +19,9 @@ import {
   DollarSign,
   BarChart3,
   Plus,
+  User,
 } from "lucide-react"
+import Link from "next/link"
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
@@ -154,6 +156,15 @@ export default function DashboardPage() {
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Plant
               </Button>
+              <Link href="/profile">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  View Profile
+                </Button>
+              </Link>
               <Button variant="outline" className="w-full justify-start border-green-200 text-green-700 bg-transparent">
                 <Package className="h-4 w-4 mr-2" />
                 Manage Inventory
