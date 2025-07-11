@@ -69,9 +69,6 @@ export default function DashboardPage() {
                 <Leaf className="h-8 w-8 text-green-600" />
                 <span className="text-2xl font-bold text-green-800">NurseryNest</span>
               </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
-                Admin Panel
-              </Badge>
             </div>
 
             <div className="flex items-center space-x-4">
