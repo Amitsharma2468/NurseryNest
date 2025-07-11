@@ -36,6 +36,27 @@ export default function PlantList() {
     fetchPlants();
   }, []);
 
+  // Handler to increment remainingPlant count for a given plantId
+  const incrementPlant = async (plantId: string) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants/${plantId}/increment`,
+        { method: "PATCH" }
+      );
+      if (!res.ok) throw new Error("Failed to increment plant");
+      const updatedPlant = await res.json();
+
+      // Update plants state with updated plant data
+      setPlants((prevPlants) =>
+        prevPlants.map((plant) =>
+          plant.plantId === updatedPlant.plantId ? updatedPlant : plant
+        )
+      );
+    } catch (err) {
+      alert("Failed to add one more plant");
+    }
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-4">
@@ -66,6 +87,7 @@ export default function PlantList() {
               <TableHead>Cost</TableHead>
               <TableHead>Total Sold</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead>Actions</TableHead> {/* New column for buttons */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -86,6 +108,14 @@ export default function PlantList() {
                 <TableCell>{p.totalSold}</TableCell>
                 <TableCell>
                   {p.createdAt ? format(new Date(p.createdAt), "yyyy-MM-dd") : "N/A"}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    onClick={() => incrementPlant(p.plantId)}
+                  >
+                    Add One More
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

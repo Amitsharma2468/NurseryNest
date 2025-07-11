@@ -1,9 +1,11 @@
 const Plant = require('../models/Plant');
 
 // Add a new plant
+const { v4: uuidv4 } = require("uuid"); // npm install uuid
+
 exports.addPlant = async (req, res) => {
   try {
-    const {
+    let {
       plantId,
       plantType,
       plantName,
@@ -12,24 +14,22 @@ exports.addPlant = async (req, res) => {
       costPerPlant,
     } = req.body;
 
-    // Validate required fields
-    if (!plantId || !plantType || !plantName || !plantImage || costPerPlant == null) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    // Auto-generate plantId if not provided
+    if (!plantId) {
+      plantId = `plant-${uuidv4().slice(0, 8)}`;
     }
 
-    // Check if plantId already exists
-    const existingPlant = await Plant.findOne({ plantId });
-    if (existingPlant) {
-      return res.status(400).json({ message: 'Plant ID already exists' });
+    if (!plantType || !plantName || !plantImage || costPerPlant == null) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Create and save new plant
+    // Create new plant
     const plant = new Plant({
       plantId,
       plantType,
       plantName,
       plantImage,
-      remainingPlant: remainingPlant || 0,
+      remainingPlant: remainingPlant || 1,
       costPerPlant,
       totalSold: 0,
     });
@@ -38,7 +38,28 @@ exports.addPlant = async (req, res) => {
 
     res.status(201).json(plant);
   } catch (error) {
-    console.error('Error adding plant:', error);
+    console.error("Error adding plant:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.incrementPlant = async (req, res) => {
+  try {
+    const { plantId } = req.params;
+
+    const plant = await Plant.findOneAndUpdate(
+      { plantId },
+      { $inc: { remainingPlant: 1 } },
+      { new: true }
+    );
+
+    if (!plant) {
+      return res.status(404).json({ message: "Plant not found" });
+    }
+
+    res.json(plant);
+  } catch (error) {
+    console.error("Error incrementing plant:", error);
     res.status(500).json({ message: error.message });
   }
 };

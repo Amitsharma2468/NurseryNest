@@ -12,7 +12,6 @@ import { CheckCircle, AlertCircle } from "lucide-react";
 export default function AddPlantPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    plantId: "",
     plantIt: "",
     plantType: "",
     plantName: "",
@@ -29,7 +28,10 @@ export default function AddPlantPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "remainingPlant" || name === "costPerPlant" ? Number(value) : value,
+      [name]:
+        name === "remainingPlant" || name === "costPerPlant"
+          ? Number(value)
+          : value,
     }));
   };
 
@@ -45,19 +47,22 @@ export default function AddPlantPage() {
     setSuccess("");
     setSaving(true);
 
-    const { plantId, plantIt, plantType, plantName, plantImage, costPerPlant } = formData;
-    if (!plantId || !plantIt || !plantType || !plantName || !plantImage || !costPerPlant) {
+    const { plantIt, plantType, plantName, plantImage, costPerPlant } = formData;
+    if (!plantIt || !plantType || !plantName || !plantImage || !costPerPlant) {
       setError("Please fill all required fields");
       setSaving(false);
       return;
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (!res.ok) {
         const data = await res.json();
@@ -92,10 +97,8 @@ export default function AddPlantPage() {
       )}
 
       <div className="space-y-4">
-        <div>
-          <Label>Plant ID *</Label>
-          <Input name="plantId" value={formData.plantId} onChange={handleChange} />
-        </div>
+        {/* Remove Plant ID input */}
+
         <div>
           <Label>Plant Date *</Label>
           <Input type="date" name="plantIt" value={formData.plantIt} onChange={handleChange} />
@@ -110,10 +113,7 @@ export default function AddPlantPage() {
         </div>
         <div>
           <Label>Plant Image *</Label>
-          <CloudinaryUpload
-            onUploadSuccess={handleImageUpload}
-            currentImage={formData.plantImage}
-          />
+          <CloudinaryUpload onUploadSuccess={handleImageUpload} currentImage={formData.plantImage} />
         </div>
         <div>
           <Label>Remaining Quantity *</Label>
@@ -134,11 +134,7 @@ export default function AddPlantPage() {
           />
         </div>
 
-        <Button
-          onClick={handleSubmit}
-          disabled={saving}
-          className="bg-green-600 hover:bg-green-700"
-        >
+        <Button onClick={handleSubmit} disabled={saving} className="bg-green-600 hover:bg-green-700">
           {saving ? "Saving..." : "Add Plant"}
         </Button>
       </div>

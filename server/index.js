@@ -31,6 +31,7 @@ mongoose
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const plantRoutes = require('./routes/plantRoutes');
+const saleRoutes = require('./routes/saleRoutes');
 
 
 
@@ -38,6 +39,7 @@ const plantRoutes = require('./routes/plantRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/plants', plantRoutes);
+app.use('/api/sales', saleRoutes);
 
 
 // Test email route
