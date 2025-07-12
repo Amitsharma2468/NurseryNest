@@ -4,27 +4,35 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import {
   Leaf,
-  Users,
-  ShoppingCart,
   Bell,
   Settings,
   LogOut,
-  TreePine,
-  Flower,
-  Sprout,
-  Package,
   DollarSign,
-  BarChart3,
   Plus,
   User,
+  Eye,
+  TrendingUp,
+  ShoppingBag,
 } from "lucide-react"
 import Link from "next/link"
 
+interface Plant {
+  plantId: string
+  plantName: string
+  plantImage: string
+  totalSold: number
+}
+
+interface Benefits {
+  monthlyBenefit: number
+  totalBenefit: number
+}
+
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
+  const [benefits, setBenefits] = useState<Benefits>({ monthlyBenefit: 0, totalBenefit: 0 })
+  const [topPlants, setTopPlants] = useState<Plant[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -37,10 +45,55 @@ export default function DashboardPage() {
       return
     }
 
-    setUser(JSON.parse(userData))
-    setLoading(false)
+    // Fetch data after token check
+    fetchBenefits(token)
+    fetchTopPlants(token)
+      .finally(() => setLoading(false))
   }, [router])
 
+  // Fetch monthly and total benefits with token
+  const fetchBenefits = async (token: string | null) => {
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/sales/benefit`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setBenefits({
+          monthlyBenefit: Number(data.monthlyBenefit || 0),
+          totalBenefit: Number(data.totalBenefit || 0),
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching benefits:", error)
+    }
+  }
+
+  // Fetch top plants with token
+  const fetchTopPlants = async (token: string | null) => {
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const data: Plant[] = await response.json()
+        const sorted = data.sort((a, b) => b.totalSold - a.totalSold)
+        setTopPlants(sorted.slice(0, 3))
+      }
+    } catch (error) {
+      console.error("Error fetching top plants:", error)
+    }
+  }
+
+  // Clear token and user data and redirect home
   const handleLogout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("user")
@@ -90,222 +143,107 @@ export default function DashboardPage() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-green-800 mb-2">Welcome back! 🌱</h1>
-          <p className="text-green-600">Here's what's happening in your nursery today</p>
+          <p className="text-green-600">Manage your nursery business efficiently</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Benefit Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card className="border-green-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Total Plants</CardTitle>
-              <TreePine className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium text-green-700">Last Month Benefit</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-800">1,234</div>
-              <p className="text-xs text-green-600">+12% from last month</p>
+              <div className="text-2xl font-bold text-green-800">
+                ৳{benefits.monthlyBenefit.toFixed(2)}
+              </div>
+              <p className="text-xs text-green-600">Previous month earnings</p>
             </CardContent>
           </Card>
 
           <Card className="border-green-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Active Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-800">89</div>
-              <p className="text-xs text-green-600">+5% from yesterday</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-700">Total Benefit</CardTitle>
               <DollarSign className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-800">$12,345</div>
-              <p className="text-xs text-green-600">+8% from last week</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">Customers</CardTitle>
-              <Users className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-800">456</div>
-              <p className="text-xs text-green-600">+15% from last month</p>
+              <div className="text-2xl font-bold text-green-800">
+                ৳{benefits.totalBenefit.toFixed(2)}
+              </div>
+              <p className="text-xs text-green-600">All time earnings</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Main Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Quick Actions */}
           <Card className="border-green-200">
             <CardHeader>
               <CardTitle className="text-green-800">Quick Actions</CardTitle>
-              <CardDescription className="text-green-600">Common tasks for your nursery</CardDescription>
+              <CardDescription className="text-green-600">Manage your nursery operations</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-green-600 hover:bg-green-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Plant
-              </Button>
               <Link href="/profile">
                 <Button
                   variant="outline"
-                  className="w-full justify-start border-green-200 text-green-700 bg-transparent"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent hover:bg-green-50"
                 >
-                  <User className="h-4 w-4 mr-2" />
-                  View Profile
+                  <User className="h-4 w-4 mr-2" /> View Profile
                 </Button>
               </Link>
-              <Button variant="outline" className="w-full justify-start border-green-200 text-green-700 bg-transparent">
-                <Package className="h-4 w-4 mr-2" />
-                Manage Inventory
-              </Button>
-              <Button variant="outline" className="w-full justify-start border-green-200 text-green-700 bg-transparent">
-                <Users className="h-4 w-4 mr-2" />
-                View Customers
-              </Button>
-              <Button variant="outline" className="w-full justify-start border-green-200 text-green-700 bg-transparent">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Sales Report
-              </Button>
+
+              <Link href="/plant-management">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent hover:bg-green-50"
+                >
+                  <Eye className="h-4 w-4 mr-2" /> See Plants
+                </Button>
+              </Link>
+
+              <Link href="/plant-management/add">
+                <Button className="w-full justify-start bg-green-600 hover:bg-green-700">
+                  <Plus className="h-4 w-4 mr-2" /> Add Plants
+                </Button>
+              </Link>
+
+              <Link href="/sales">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent hover:bg-green-50"
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" /> See Benefits
+                </Button>
+              </Link>
+
+              <Link href="/sale-form">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent hover:bg-green-50"
+                >
+                  <ShoppingBag className="h-4 w-4 mr-2" /> Sale Plants
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
+          {/* Popular Trees */}
           <Card className="border-green-200">
             <CardHeader>
-              <CardTitle className="text-green-800">Recent Activity</CardTitle>
-              <CardDescription className="text-green-600">Latest updates in your nursery</CardDescription>
+              <CardTitle className="text-green-800">Popular Trees</CardTitle>
+              <CardDescription className="text-green-600">Top 3 most sold trees</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="bg-green-100 p-2 rounded-full">
-                  <Sprout className="h-4 w-4 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800">New order received</p>
-                  <p className="text-xs text-green-600">5 minutes ago</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Package className="h-4 w-4 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800">Inventory updated</p>
-                  <p className="text-xs text-green-600">1 hour ago</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="bg-purple-100 p-2 rounded-full">
-                  <Users className="h-4 w-4 text-purple-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800">New customer registered</p>
-                  <p className="text-xs text-green-600">2 hours ago</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Plant Care Reminders */}
-          <Card className="border-green-200">
-            <CardHeader>
-              <CardTitle className="text-green-800">Care Reminders</CardTitle>
-              <CardDescription className="text-green-600">Plants that need attention</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                <div className="flex items-center space-x-3">
-                  <Flower className="h-5 w-5 text-yellow-600" />
+              {topPlants.map((plant) => (
+                <div key={plant.plantId} className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                  <img src={plant.plantImage} alt={plant.plantName} className="w-12 h-12 object-cover rounded-full" />
                   <div>
-                    <p className="text-sm font-medium text-green-800">Roses</p>
-                    <p className="text-xs text-green-600">Need watering</p>
+                    <p className="text-sm font-medium text-green-800">{plant.plantName}</p>
+                    <p className="text-xs text-green-600">Sold: {plant.totalSold}</p>
                   </div>
                 </div>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
-                  Today
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center space-x-3">
-                  <TreePine className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium text-green-800">Pine Trees</p>
-                    <p className="text-xs text-green-600">Fertilizer due</p>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                  Tomorrow
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-green-200">
-            <CardHeader>
-              <CardTitle className="text-green-800">Sales Overview</CardTitle>
-              <CardDescription className="text-green-600">Monthly sales performance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 flex items-center justify-center bg-green-50 rounded-lg">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 text-green-400 mx-auto mb-2" />
-                  <p className="text-green-600">Sales chart will be displayed here</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-green-200">
-            <CardHeader>
-              <CardTitle className="text-green-800">Popular Plants</CardTitle>
-              <CardDescription className="text-green-600">Best selling plants this month</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <Flower className="h-4 w-4 text-green-600" />
-                    </div>
-                    <span className="text-green-800">Roses</span>
-                  </div>
-                  <span className="text-green-600">234 sold</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <TreePine className="h-4 w-4 text-green-600" />
-                    </div>
-                    <span className="text-green-800">Succulents</span>
-                  </div>
-                  <span className="text-green-600">189 sold</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <Sprout className="h-4 w-4 text-green-600" />
-                    </div>
-                    <span className="text-green-800">Herbs</span>
-                  </div>
-                  <span className="text-green-600">156 sold</span>
-                </div>
-              </div>
+              ))}
             </CardContent>
           </Card>
         </div>

@@ -1,120 +1,258 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Leaf, Mail, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react"
+import {
+  Leaf,
+  Bell,
+  Settings,
+  LogOut,
+  DollarSign,
+  Plus,
+  User,
+  Eye,
+  TrendingUp,
+  ShoppingBag,
+} from "lucide-react"
+import Link from "next/link"
 
-export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+interface Plant {
+  plantId: string
+  plantName: string
+  plantImage: string
+  totalSold: number
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-    setSuccess("")
+interface Benefits {
+  monthlyBenefit: number
+  totalBenefit: number
+}
+
+export default function DashboardPage() {
+  const [benefits, setBenefits] = useState<Benefits>({ monthlyBenefit: 0, totalBenefit: 0 })
+  const [topPlants, setTopPlants] = useState<Plant[]>([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  const handleLogout = () => {
+    localStorage.clear()
+    router.push("/login")
+  }
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    const userData = localStorage.getItem("user")
+
+    if (!token || !userData) {
+      handleLogout()
+      return
+    }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
+      const user = JSON.parse(userData)
+
+      // Basic user data validation
+      if (!user.email) {
+        handleLogout()
+        return
+      }
+
+      setLoading(true)
+
+      Promise.all([fetchBenefits(token), fetchTopPlants(token)])
+        .catch(() => {
+          // On error, log out user to force login
+          handleLogout()
+        })
+        .finally(() => setLoading(false))
+    } catch {
+      handleLogout()
+    }
+  }, [router])
+
+  const fetchBenefits = async (token: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/sales/benefit`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
 
-      const data = await response.json()
-
       if (response.ok) {
-        setSuccess("Password reset email sent! Please check your inbox.")
-        setEmail("")
-      } else {
-        setError(data.message || "Failed to send reset email")
+        const data = await response.json()
+        setBenefits({
+          monthlyBenefit: Number(data.monthlyBenefit || 0),
+          totalBenefit: Number(data.totalBenefit || 0),
+        })
+      } else if (response.status === 401) {
+        handleLogout()
       }
-    } catch (err) {
-      setError("Network error. Please try again.")
-    } finally {
-      setLoading(false)
+    } catch (error) {
+      console.error("Error fetching benefits:", error)
     }
   }
 
+  const fetchTopPlants = async (token: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (response.ok) {
+        const data: Plant[] = await response.json()
+        const sorted = data.sort((a, b) => b.totalSold - a.totalSold)
+        setTopPlants(sorted.slice(0, 3))
+      } else if (response.status === 401) {
+        handleLogout()
+      }
+    } catch (error) {
+      console.error("Error fetching top plants:", error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <Leaf className="h-12 w-12 text-green-600 animate-pulse mx-auto mb-4" />
+          <p className="text-green-600">Loading your nursery...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2 mb-4">
-            <Leaf className="h-8 w-8 text-green-600" />
-            <span className="text-2xl font-bold text-green-800">NurseryNest</span>
-          </Link>
-          <h1 className="text-3xl font-bold text-green-800">Forgot Password</h1>
-          <p className="text-green-600 mt-2">We'll send you a reset link</p>
+    <div className="min-h-screen bg-green-50">
+      {/* Header */}
+      <header className="bg-white border-b border-green-200 sticky top-0 z-50">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Leaf className="h-8 w-8 text-green-600" />
+                <span className="text-2xl font-bold text-green-800">NurseryNest</span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" className="text-green-600">
+                <Bell className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-green-600">
+                <Settings className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-600 hover:text-red-700">
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="p-6">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-green-800 mb-2">Welcome back! 🌱</h1>
+          <p className="text-green-600">Manage your nursery business efficiently</p>
         </div>
 
-        <Card className="border-green-200 shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-green-800">Reset Password</CardTitle>
-            <CardDescription className="text-center text-green-600">
-              Enter your email address and we'll send you a link to reset your password
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert className="mb-4 border-red-200 bg-red-50">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-600">{error}</AlertDescription>
-              </Alert>
-            )}
+        {/* Benefit Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card className="border-green-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-700">Last Month Benefit</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-800">৳{benefits.monthlyBenefit.toFixed(2)}</div>
+              <p className="text-xs text-green-600">Previous month earnings</p>
+            </CardContent>
+          </Card>
 
-            {success && (
-              <Alert className="mb-4 border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-600">{success}</AlertDescription>
-              </Alert>
-            )}
+          <Card className="border-green-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-700">Total Benefit</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-800">৳{benefits.totalBenefit.toFixed(2)}</div>
+              <p className="text-xs text-green-600">All time earnings</p>
+            </CardContent>
+          </Card>
+        </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-green-700">
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 border-green-200 focus:border-green-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Link"}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <Link href="/login" className="inline-flex items-center text-green-600 hover:text-green-700">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Sign In
+        {/* Main Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Quick Actions */}
+          <Card className="border-green-200">
+            <CardHeader>
+              <CardTitle className="text-green-800">Quick Actions</CardTitle>
+              <CardDescription className="text-green-600">Manage your nursery operations</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Link href="/profile">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent hover:bg-green-50"
+                >
+                  <User className="h-4 w-4 mr-2" /> View Profile
+                </Button>
               </Link>
-            </div>
-          </CardContent>
-        </Card>
+
+              <Link href="/plant-management">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent hover:bg-green-50"
+                >
+                  <Eye className="h-4 w-4 mr-2" /> See Plants
+                </Button>
+              </Link>
+
+              <Link href="/plant-management/add">
+                <Button className="w-full justify-start bg-green-600 hover:bg-green-700">
+                  <Plus className="h-4 w-4 mr-2" /> Add Plants
+                </Button>
+              </Link>
+
+              <Link href="/sales">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent hover:bg-green-50"
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" /> See Benefits
+                </Button>
+              </Link>
+
+              <Link href="/sale-form">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start border-green-200 text-green-700 bg-transparent hover:bg-green-50"
+                >
+                  <ShoppingBag className="h-4 w-4 mr-2" /> Sale Plants
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Popular Trees */}
+          <Card className="border-green-200">
+            <CardHeader>
+              <CardTitle className="text-green-800">Popular Trees</CardTitle>
+              <CardDescription className="text-green-600">Top 3 most sold trees</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {topPlants.map((plant) => (
+                <div key={plant.plantId} className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                  <img src={plant.plantImage} alt={plant.plantName} className="w-12 h-12 object-cover rounded-full" />
+                  <div>
+                    <p className="text-sm font-medium text-green-800">{plant.plantName}</p>
+                    <p className="text-xs text-green-600">Sold: {plant.totalSold}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

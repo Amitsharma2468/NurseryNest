@@ -1,81 +1,92 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Leaf, Mail, Lock, AlertCircle, CheckCircle } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+// Removed unused import: useRouter
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Leaf, Mail, Lock, AlertCircle, CheckCircle } from "lucide-react";
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const router = useRouter()
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  // Removed router since it's not used anymore
+  // const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-  }
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      setLoading(false)
-      return
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long")
-      setLoading(false)
-      return
+      setError("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         setSuccess(
-          "Registration successful! Please check your email and click the verification link to activate your account.",
-        )
-        setFormData({ email: "", password: "", confirmPassword: "" })
+          "Registration successful! Please check your email and click the verification link to activate your account."
+        );
+        setFormData({ email: "", password: "", confirmPassword: "" });
       } else {
-        setError(data.message || "Registration failed")
+        setError(data.message || "Registration failed");
       }
-    } catch (err) {
-      setError("Network error. Please try again.")
+    } catch {
+      // Removed unused error variable `err`
+      setError("Network error. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
@@ -87,7 +98,9 @@ export default function SignUpPage() {
             <span className="text-2xl font-bold text-green-800">NurseryNest</span>
           </Link>
           <h1 className="text-3xl font-bold text-green-800">Create Account</h1>
-          <p className="text-green-600 mt-2">Join the growing community of nursery owners</p>
+          <p className="text-green-600 mt-2">
+            Join the growing community of nursery owners
+          </p>
         </div>
 
         <Card className="border-green-200 shadow-lg">
@@ -170,7 +183,11 @@ export default function SignUpPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={loading}
+              >
                 {loading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
@@ -178,7 +195,10 @@ export default function SignUpPage() {
             <div className="mt-6 text-center">
               <p className="text-green-600">
                 Already have an account?{" "}
-                <Link href="/login" className="text-green-700 hover:text-green-800 font-medium">
+                <Link
+                  href="/login"
+                  className="text-green-700 hover:text-green-800 font-medium"
+                >
                   Sign in
                 </Link>
               </p>
@@ -187,5 +207,5 @@ export default function SignUpPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

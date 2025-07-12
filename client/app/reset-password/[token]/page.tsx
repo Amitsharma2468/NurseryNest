@@ -1,85 +1,87 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Leaf, Lock, AlertCircle, CheckCircle } from "lucide-react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Leaf, Lock, AlertCircle, CheckCircle } from "lucide-react"
+export default function ResetPasswordPage() {
+  const router = useRouter();
+  const params = useParams();
+  const token = params?.token as string;
 
-export default function ResetPasswordPage({ params }: { params: { token: string } }) {
   const [formData, setFormData] = useState({
     password: "",
     confirmPassword: "",
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const router = useRouter()
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-  }
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      setLoading(false)
-      return
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long")
-      setLoading(false)
-      return
+      setError("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
     }
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/auth/reset-password/${params.token}`,
+        `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/auth/reset-password/${token}`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ password: formData.password }),
-        },
-      )
+        }
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setSuccess("Password reset successful! Redirecting to login...")
-        setTimeout(() => {
-          router.push("/login")
-        }, 2000)
+        setSuccess("Password reset successful! Redirecting to login...");
+        setTimeout(() => router.push("/login"), 2000);
       } else {
-        setError(data.message || "Password reset failed")
+        setError(data.message || "Password reset failed");
       }
-    } catch (err) {
-      setError("Network error. Please try again.")
+    } catch {
+      setError("Network error. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 mb-4">
             <Leaf className="h-8 w-8 text-green-600" />
@@ -158,5 +160,5 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
         </Card>
       </div>
     </div>
-  )
+  );
 }

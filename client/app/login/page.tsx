@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -45,11 +44,12 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (response.ok) {
-        // Store token in localStorage
+        // Clear old data before setting new
+        localStorage.clear()
+
         localStorage.setItem("token", data.token)
         localStorage.setItem("user", JSON.stringify(data.user))
 
-        // Redirect to dashboard
         router.push("/dashboard")
       } else {
         if (data.message === "Please verify your email before logging in") {
@@ -65,7 +65,7 @@ export default function LoginPage() {
           setError(data.message || "Login failed")
         }
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.")
     } finally {
       setLoading(false)
@@ -96,9 +96,7 @@ export default function LoginPage() {
             {error && (
               <Alert className="mb-4 border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-600">
-                  {typeof error === "string" ? error : error}
-                </AlertDescription>
+                <AlertDescription className="text-red-600">{typeof error === "string" ? error : error}</AlertDescription>
               </Alert>
             )}
 
@@ -154,7 +152,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-green-600">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link href="/signup" className="text-green-700 hover:text-green-800 font-medium">
                   Sign up
                 </Link>

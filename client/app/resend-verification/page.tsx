@@ -40,7 +40,7 @@ export default function ResendVerificationPage() {
       } else {
         setError(data.message || "Failed to send verification email")
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.")
     } finally {
       setLoading(false)
@@ -57,7 +57,7 @@ export default function ResendVerificationPage() {
             <span className="text-2xl font-bold text-green-800">NurseryNest</span>
           </Link>
           <h1 className="text-3xl font-bold text-green-800">Resend Verification</h1>
-          <p className="text-green-600 mt-2">We'll send you a new verification link</p>
+          <p className="text-green-600 mt-2">We&apos;ll send you a new verification link</p>
         </div>
 
         <Card className="border-green-200 shadow-lg">

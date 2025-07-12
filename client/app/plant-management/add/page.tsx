@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CloudinaryUpload } from "@/components/cloudinary-upload";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { useEffect, useState, ChangeEvent } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { CloudinaryUpload } from "@/components/cloudinary-upload"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CheckCircle, AlertCircle, ArrowLeft } from "lucide-react"
 
 export default function AddPlantPage() {
-  const router = useRouter();
+  const router = useRouter()
   const [formData, setFormData] = useState({
     plantIt: "",
     plantType: "",
@@ -18,126 +18,153 @@ export default function AddPlantPage() {
     plantImage: "",
     remainingPlant: 0,
     costPerPlant: 0,
-  });
+  })
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [saving, setSaving] = useState(false)
 
-  const handleChange = (e: any) => {
-    const { name, value } = e.target;
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    const userData = localStorage.getItem("user")
+
+    if (!token || !userData) {
+      router.push("/login")
+      return
+    }
+  }, [router])
+
+  // Use explicit type for event here instead of `any`
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        name === "remainingPlant" || name === "costPerPlant"
-          ? Number(value)
-          : value,
-    }));
-  };
+      [name]: name === "remainingPlant" || name === "costPerPlant" ? Number(value) : value,
+    }))
+  }
 
   const handleImageUpload = (url: string) => {
     setFormData((prev) => ({
       ...prev,
       plantImage: url,
-    }));
-  };
+    }))
+  }
 
   const handleSubmit = async () => {
-    setError("");
-    setSuccess("");
-    setSaving(true);
+    setError("")
+    setSuccess("")
+    setSaving(true)
 
-    const { plantIt, plantType, plantName, plantImage, costPerPlant } = formData;
+    const { plantIt, plantType, plantName, plantImage, costPerPlant } = formData
     if (!plantIt || !plantType || !plantName || !plantImage || !costPerPlant) {
-      setError("Please fill all required fields");
-      setSaving(false);
-      return;
+      setError("Please fill all required fields")
+      setSaving(false)
+      return
     }
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(formData),
+      })
 
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.message || "Failed to add plant");
+        const data = await res.json()
+        setError(data.message || "Failed to add plant")
       } else {
-        setSuccess("Plant added successfully!");
-        setTimeout(() => router.push("/plant-management"), 1500);
+        setSuccess("Plant added successfully!")
+        setTimeout(() => router.push("/plant-management"), 1500)
       }
-    } catch (err) {
-      setError("Network error while saving plant");
+    } catch {
+      setError("Network error while saving plant")
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-green-50 rounded-md shadow-md">
-      <h2 className="text-2xl font-bold text-green-800 mb-4">Add New Plant</h2>
-
-      {error && (
-        <Alert className="mb-4 border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {success && (
-        <Alert className="mb-4 border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="space-y-4">
-        {/* Remove Plant ID input */}
-
-        <div>
-          <Label>Plant Date *</Label>
-          <Input type="date" name="plantIt" value={formData.plantIt} onChange={handleChange} />
-        </div>
-        <div>
-          <Label>Plant Type *</Label>
-          <Input name="plantType" value={formData.plantType} onChange={handleChange} />
-        </div>
-        <div>
-          <Label>Plant Name *</Label>
-          <Input name="plantName" value={formData.plantName} onChange={handleChange} />
-        </div>
-        <div>
-          <Label>Plant Image *</Label>
-          <CloudinaryUpload onUploadSuccess={handleImageUpload} currentImage={formData.plantImage} />
-        </div>
-        <div>
-          <Label>Remaining Quantity *</Label>
-          <Input
-            type="number"
-            name="remainingPlant"
-            value={formData.remainingPlant}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <Label>Cost Per Plant *</Label>
-          <Input
-            type="number"
-            name="costPerPlant"
-            value={formData.costPerPlant}
-            onChange={handleChange}
-          />
+    <div
+      className="min-h-screen bg-cover bg-center flex items-center justify-center"
+      style={{ backgroundImage: "url('/nursery.jpg')" }}
+    >
+      <div className="backdrop-blur-lg bg-white/40 shadow-md rounded-xl p-8 w-full max-w-2xl border border-green-200">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
+            <ArrowLeft className="h-5 w-5 text-green-800" />
+          </Button>
+          <h2 className="text-2xl font-bold text-green-800 ml-3">Add New Plant</h2>
         </div>
 
-        <Button onClick={handleSubmit} disabled={saving} className="bg-green-600 hover:bg-green-700">
-          {saving ? "Saving..." : "Add Plant"}
-        </Button>
+        {error && (
+          <Alert className="mb-4 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {success && (
+          <Alert className="mb-4 border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription>{success}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="space-y-5">
+          <div className="space-y-1">
+            <Label>Plant Date *</Label>
+            <Input type="date" name="plantIt" value={formData.plantIt} onChange={handleChange} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Plant Type *</Label>
+            <Input name="plantType" value={formData.plantType} onChange={handleChange} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Plant Name *</Label>
+            <Input name="plantName" value={formData.plantName} onChange={handleChange} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Plant Image *</Label>
+            <CloudinaryUpload onUploadSuccess={handleImageUpload} currentImage={formData.plantImage} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Remaining Quantity *</Label>
+            <Input
+              type="number"
+              name="remainingPlant"
+              value={formData.remainingPlant}
+              onChange={handleChange}
+              min={0}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Cost Per Plant *</Label>
+            <Input
+              type="number"
+              name="costPerPlant"
+              value={formData.costPerPlant}
+              onChange={handleChange}
+              min={0}
+            />
+          </div>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            {saving ? "Saving..." : "Add Plant"}
+          </Button>
+        </div>
       </div>
     </div>
-  );
+  )
 }

@@ -2,22 +2,24 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Leaf, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 
-export default function VerifyEmailPage({ params }: { params: { token: string } }) {
+export default function VerifyEmailPage() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
   const [message, setMessage] = useState("")
   const router = useRouter()
+  const params = useParams()  // Get params here
+  const token = params.token
 
   useEffect(() => {
     const verifyEmail = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/auth/verify-email/${params.token}`,
+          `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/auth/verify-email/${token}`,
           {
             method: "GET",
             headers: {
@@ -35,19 +37,18 @@ export default function VerifyEmailPage({ params }: { params: { token: string } 
           setStatus("error")
           setMessage(data.message || "Email verification failed. The link may be expired or invalid.")
         }
-      } catch (error) {
+      } catch {
         setStatus("error")
         setMessage("Network error. Please try again later.")
       }
     }
 
-    if (params.token) {
+    if (token) {
       verifyEmail()
     }
-  }, [params.token])
+  }, [token])
 
   const handleResendVerification = async () => {
-    // You might want to collect email for resending
     router.push("/resend-verification")
   }
 

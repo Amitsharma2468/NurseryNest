@@ -70,7 +70,7 @@ export default function ProfileSimplePage() {
       } else {
         setError("Failed to fetch profile")
       }
-    } catch (err) {
+    } catch {
       setError("Network error while fetching profile")
     } finally {
       setLoading(false)
@@ -117,7 +117,7 @@ export default function ProfileSimplePage() {
         const data = await response.json()
         setError(data.message || "Failed to update profile")
       }
-    } catch (err) {
+    } catch {
       setError("Network error while updating profile")
     } finally {
       setSaving(false)
