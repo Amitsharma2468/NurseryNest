@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type Plant = {
   plantId: string;
@@ -31,23 +31,23 @@ export default function SaleFormPage() {
   const router = useRouter();
   const [plants, setPlants] = useState<Plant[]>([]);
   const [formData, setFormData] = useState({
-    customerName: '',
-    plantName: '',
+    customerName: "",
+    plantName: "",
     quantity: 1,
     salePricePerPlant: 0,
   });
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
 
     if (!token || !userData) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
@@ -57,60 +57,101 @@ export default function SaleFormPage() {
   useEffect(() => {
     const fetchPlants = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Unauthorized: Please login again.");
+          router.push("/login");
+          return;
+        }
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.status === 401) {
+          setError("Unauthorized: Please login again.");
+          router.push("/login");
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch plants");
+        }
+
         const data: Plant[] = await res.json();
         setPlants(data);
-      } catch {
-        setError('Error fetching plants');
+      } catch (err) {
+        setError((err as Error).message || "Error fetching plants");
       }
     };
     fetchPlants();
-  }, []);
+  }, [router]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'quantity' || name === 'salePricePerPlant' ? Number(value) : value,
+      [name]: name === "quantity" || name === "salePricePerPlant" ? Number(value) : value,
     }));
 
-    if (name === 'plantName') {
+    // Select plant by name
+    if (name === "plantName") {
       const matched = plants.find((p) => p.plantName === value);
       setSelectedPlant(matched || null);
     }
   };
 
   const handleSubmit = async () => {
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setSaving(true);
 
     const { customerName, plantName, quantity, salePricePerPlant } = formData;
 
     if (!customerName || !plantName || !quantity || !salePricePerPlant) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       setSaving(false);
       return;
     }
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Unauthorized: Please login.");
+        router.push("/login");
+        setSaving(false);
+        return;
+      }
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/sales`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData), // 🔒 only sends plantName, not plantId
       });
+
+      if (res.status === 401) {
+        setError("Unauthorized: Please login again.");
+        router.push("/login");
+        setSaving(false);
+        return;
+      }
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.message || 'Failed to submit sale');
+        setError(data.message || "Failed to submit sale");
       } else {
         const saleData: Sale = await res.json();
-        setSuccess('Sale recorded successfully');
+        setSuccess("Sale recorded successfully");
         generateInvoicePDF(saleData);
-        setTimeout(() => router.push('/sales'), 1500);
+        setTimeout(() => router.push("/sales"), 1500);
       }
     } catch {
-      setError('Network error');
+      setError("Network error");
     } finally {
       setSaving(false);
     }
@@ -119,11 +160,11 @@ export default function SaleFormPage() {
   const generateInvoicePDF = (sale: Sale) => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('NurseryNest Sale Invoice', 14, 20);
+    doc.text("NurseryNest Sale Invoice", 14, 20);
 
     autoTable(doc, {
       startY: 30,
-      head: [['Customer', 'Plant', 'Type', 'Quantity', 'Unit Price', 'Total']],
+      head: [["Customer", "Plant", "Type", "Quantity", "Unit Price", "Total"]],
       body: [
         [
           sale.customerName,
@@ -148,10 +189,13 @@ export default function SaleFormPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-cover bg-center" style={{ backgroundImage: "url('/nursery.jpg')" }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-6 bg-cover bg-center"
+      style={{ backgroundImage: "url('/nursery.jpg')" }}
+    >
       <div className="max-w-xl w-full bg-white/30 backdrop-blur-md rounded-lg shadow-lg p-10 space-y-8">
         <button
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push("/dashboard")}
           className="flex items-center text-green-800 font-semibold hover:text-green-600 mb-4"
         >
           <ArrowLeft className="mr-2" />
@@ -174,7 +218,13 @@ export default function SaleFormPage() {
           </Alert>
         )}
 
-        <form className="space-y-5" onSubmit={(e: FormEvent) => { e.preventDefault(); handleSubmit(); }}>
+        <form
+          className="space-y-5"
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
           <div className="flex flex-col gap-1">
             <Label htmlFor="customerName">Customer Name *</Label>
             <Input
@@ -207,10 +257,20 @@ export default function SaleFormPage() {
 
           {selectedPlant && (
             <div className="p-4 bg-white/50 rounded border border-green-200">
-              <p><strong>Type:</strong> {selectedPlant.plantType}</p>
-              <p><strong>ID:</strong> {selectedPlant.plantId}</p>
-              <p><strong>Stock:</strong> {selectedPlant.remainingPlant}</p>
-              <img src={selectedPlant.plantImage} alt={selectedPlant.plantName} className="w-24 h-24 object-cover rounded mt-2" />
+              <p>
+                <strong>Type:</strong> {selectedPlant.plantType}
+              </p>
+              <p>
+                <strong>ID:</strong> {selectedPlant.plantId}
+              </p>
+              <p>
+                <strong>Stock:</strong> {selectedPlant.remainingPlant}
+              </p>
+              <img
+                src={selectedPlant.plantImage}
+                alt={selectedPlant.plantName}
+                className="w-24 h-24 object-cover rounded mt-2"
+              />
             </div>
           )}
 
@@ -241,7 +301,7 @@ export default function SaleFormPage() {
           </div>
 
           <Button type="submit" disabled={saving} className="w-full bg-green-700 hover:bg-green-800">
-            {saving ? 'Saving...' : 'Record Sale & Generate Invoice'}
+            {saving ? "Saving..." : "Record Sale & Generate Invoice"}
           </Button>
         </form>
       </div>

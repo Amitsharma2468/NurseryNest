@@ -1,10 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const plantController = require('../controllers/plantController');
+const plantController = require("../controllers/plantController");
+const { protect } = require("../middleware/auth");
 
-router.post('/', plantController.addPlant);
-router.get('/', plantController.getPlants);
-router.patch("/:plantId/increment", plantController.incrementPlant);
-
+router.post("/", protect, plantController.addPlant);
+router.get("/", protect, plantController.getPlants);
+router.patch("/:plantId/increment", protect, plantController.incrementPlant);
 
 module.exports = router;

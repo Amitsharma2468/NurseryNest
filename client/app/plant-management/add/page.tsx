@@ -1,65 +1,62 @@
-"use client"
+"use client";
 
-import { useEffect, useState, ChangeEvent } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { CloudinaryUpload } from "@/components/cloudinary-upload"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle, AlertCircle, ArrowLeft } from "lucide-react"
+import { useEffect, useState, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CloudinaryUpload } from "@/components/cloudinary-upload";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 
 export default function AddPlantPage() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    plantIt: "",
     plantType: "",
     plantName: "",
     plantImage: "",
-    remainingPlant: 0,
+    remainingPlant: 1,
     costPerPlant: 0,
-  })
+  });
 
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    const userData = localStorage.getItem("user")
-
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
     if (!token || !userData) {
-      router.push("/login")
-      return
+      router.push("/login");
     }
-  }, [router])
+  }, [router]);
 
-  // Use explicit type for event here instead of `any`
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: name === "remainingPlant" || name === "costPerPlant" ? Number(value) : value,
-    }))
-  }
+    }));
+  };
 
   const handleImageUpload = (url: string) => {
     setFormData((prev) => ({
       ...prev,
       plantImage: url,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async () => {
-    setError("")
-    setSuccess("")
-    setSaving(true)
+    setError("");
+    setSuccess("");
+    setSaving(true);
 
-    const { plantIt, plantType, plantName, plantImage, costPerPlant } = formData
-    if (!plantIt || !plantType || !plantName || !plantImage || !costPerPlant) {
-      setError("Please fill all required fields")
-      setSaving(false)
-      return
+    const { plantType, plantName, plantImage, costPerPlant } = formData;
+
+    if (!plantType || !plantName || !plantImage || costPerPlant <= 0) {
+      setError("Please fill all required fields correctly.");
+      setSaving(false);
+      return;
     }
 
     try {
@@ -70,21 +67,22 @@ export default function AddPlantPage() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify(formData),
-      })
+      });
+
+      const data = await res.json();
 
       if (!res.ok) {
-        const data = await res.json()
-        setError(data.message || "Failed to add plant")
+        setError(data.message || "Failed to add plant");
       } else {
-        setSuccess("Plant added successfully!")
-        setTimeout(() => router.push("/plant-management"), 1500)
+        setSuccess("✅ Plant added successfully!");
+        setTimeout(() => router.push("/plant-management"), 1500);
       }
-    } catch {
-      setError("Network error while saving plant")
+    } catch  {
+      setError("❌ Network error while saving plant.");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <div
@@ -115,11 +113,6 @@ export default function AddPlantPage() {
 
         <div className="space-y-5">
           <div className="space-y-1">
-            <Label>Plant Date *</Label>
-            <Input type="date" name="plantIt" value={formData.plantIt} onChange={handleChange} />
-          </div>
-
-          <div className="space-y-1">
             <Label>Plant Type *</Label>
             <Input name="plantType" value={formData.plantType} onChange={handleChange} />
           </div>
@@ -131,7 +124,10 @@ export default function AddPlantPage() {
 
           <div className="space-y-1">
             <Label>Plant Image *</Label>
-            <CloudinaryUpload onUploadSuccess={handleImageUpload} currentImage={formData.plantImage} />
+            <CloudinaryUpload
+              onUploadSuccess={handleImageUpload}
+              currentImage={formData.plantImage}
+            />
           </div>
 
           <div className="space-y-1">
@@ -141,7 +137,7 @@ export default function AddPlantPage() {
               name="remainingPlant"
               value={formData.remainingPlant}
               onChange={handleChange}
-              min={0}
+              min={1}
             />
           </div>
 
@@ -166,5 +162,5 @@ export default function AddPlantPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

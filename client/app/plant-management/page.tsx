@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/table";
 import { Plus, ArrowLeft } from "lucide-react";
 
-// Define a type for Plant to avoid using any
 interface Plant {
   plantId: string;
   plantType: string;
@@ -44,12 +43,15 @@ export default function PlantList() {
 
     const fetchPlants = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!res.ok) throw new Error("Failed to fetch plants");
         const data: Plant[] = await res.json();
         setPlants(data);
       } catch (error) {
-        // error might be unknown so assert type
         const err = error as Error;
         setError(err.message || "Error fetching plants");
       } finally {
@@ -64,7 +66,12 @@ export default function PlantList() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_APP_BACKEND_URL}/api/plants/${plantId}/increment`,
-        { method: "PATCH" }
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
       );
       if (!res.ok) throw new Error("Failed to increment plant");
       const updatedPlant: Plant = await res.json();
@@ -83,7 +90,7 @@ export default function PlantList() {
     <div className="min-h-screen w-full bg-white px-4 py-6 sm:px-6 md:px-10">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <Button variant="outline" onClick={() => router.push("/dashboard")}>
+          <Button variant="outline" onClick={() => router.push("/dashboard")}> 
             <ArrowLeft className="w-4 h-4 mr-1" />
             Dashboard
           </Button>
@@ -138,9 +145,7 @@ export default function PlantList() {
                   <TableCell>৳{p.costPerPlant.toFixed(2)}</TableCell>
                   <TableCell>{p.totalSold}</TableCell>
                   <TableCell>
-                    {p.createdAt
-                      ? format(new Date(p.createdAt), "yyyy-MM-dd")
-                      : "N/A"}
+                    {p.createdAt ? format(new Date(p.createdAt), "yyyy-MM-dd") : "N/A"}
                   </TableCell>
                   <TableCell>
                     <Button

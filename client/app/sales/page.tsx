@@ -145,9 +145,13 @@ export default function SaleList() {
       doc.text(`From ${range.from} to ${range.to}`, 14, 30);
     }
 
-    const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.totalSalePrice, 0);
+    const totalRevenue = filteredSales.reduce(
+      (sum, sale) => sum + (sale.totalSalePrice ?? 0),
+      0
+    );
     const totalProfit = filteredSales.reduce(
-      (sum, sale) => sum + (sale.salePricePerPlant - sale.costPerPlant) * sale.quantity,
+      (sum, sale) =>
+        sum + (((sale.salePricePerPlant ?? 0) - (sale.costPerPlant ?? 0)) * (sale.quantity ?? 0)),
       0
     );
 
@@ -164,9 +168,9 @@ export default function SaleList() {
         s.saleId,
         s.customerName,
         s.plantName,
-        s.quantity.toString(),
-        s.totalSalePrice.toFixed(2),
-        ((s.salePricePerPlant - s.costPerPlant) * s.quantity).toFixed(2),
+        (s.quantity ?? 0).toString(),
+        (s.totalSalePrice ?? 0).toFixed(2),
+        (((s.salePricePerPlant ?? 0) - (s.costPerPlant ?? 0)) * (s.quantity ?? 0)).toFixed(2),
         format(new Date(s.createdAt), "yyyy-MM-dd"),
       ]),
       styles: { fontSize: 9 },
@@ -189,7 +193,8 @@ export default function SaleList() {
   }
 
   const totalProfit = filteredSales.reduce(
-    (sum, sale) => sum + (sale.salePricePerPlant - sale.costPerPlant) * sale.quantity,
+    (sum, sale) =>
+      sum + (((sale.salePricePerPlant ?? 0) - (sale.costPerPlant ?? 0)) * (sale.quantity ?? 0)),
     0
   );
 
@@ -244,10 +249,11 @@ export default function SaleList() {
                 <td className="px-2 py-1 border">{s.saleId}</td>
                 <td className="px-2 py-1 border">{s.customerName}</td>
                 <td className="px-2 py-1 border">{s.plantName}</td>
-                <td className="px-2 py-1 border">{s.quantity}</td>
-                <td className="px-2 py-1 border">৳{s.totalSalePrice.toFixed(2)}</td>
+                <td className="px-2 py-1 border">{s.quantity ?? 0}</td>
+                <td className="px-2 py-1 border">৳{(s.totalSalePrice ?? 0).toFixed(2)}</td>
                 <td className="px-2 py-1 border">
-                  ৳{((s.salePricePerPlant - s.costPerPlant) * s.quantity).toFixed(2)}
+                  ৳
+                  {(((s.salePricePerPlant ?? 0) - (s.costPerPlant ?? 0)) * (s.quantity ?? 0)).toFixed(2)}
                 </td>
                 <td className="px-2 py-1 border">{format(new Date(s.createdAt), "yyyy-MM-dd")}</td>
               </tr>

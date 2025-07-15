@@ -9,7 +9,10 @@ const PlantSchema = new mongoose.Schema({
   costPerPlant: { type: Number, required: true },
   totalSold: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
-});
 
+  // Associate the plant with a user
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+});
+PlantSchema.index({ plantName: 1, userId: 1 }, { unique: true });
 const Plant = mongoose.models.Plant || mongoose.model('Plant', PlantSchema);
 module.exports = Plant;
