@@ -74,7 +74,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+/*process.on('SIGTERM', () => {
   console.log('SIGTERM received. Shutting down gracefully.');
   server.close(() => {
     console.log('Server closed.');
@@ -83,4 +83,4 @@ process.on('SIGTERM', () => {
       process.exit(0);
     });
   });
-});
+});*/
