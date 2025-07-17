@@ -1,10 +1,12 @@
-import mongoose from "mongoose";
+// models/Sale.js
+
+const mongoose = require("mongoose");
 
 const SaleSchema = new mongoose.Schema({
   saleId: {
     type: String,
     required: true,
-    unique: true, // ✅ Ensure uniqueness like plantId
+    unique: true,
   },
   customerName: {
     type: String,
@@ -54,4 +56,4 @@ const SaleSchema = new mongoose.Schema({
 });
 
 const Sale = mongoose.models.Sale || mongoose.model("Sale", SaleSchema);
-export default Sale;
+module.exports = Sale;
