@@ -203,7 +203,8 @@ exports.verifyEmail = async (req, res) => {
     user.verificationTokenExpires = undefined;
     await user.save();
 
-    res.status(200).json({ message: 'Email verified successfully' });
+   // res.status(200).json({ message: 'Email verified successfully' });
+   res.redirect(`${process.env.NEXT_PUBLIC_APP_FRONTEND_URL}/login`);
   } catch (error) {
     console.error('Email verification error:', error);
     res.status(500).json({ message: error.message });
