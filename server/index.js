@@ -18,14 +18,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch((err) => {
-    console.error('MongoDB connection error:', err.message);
-    process.exit(1);
-  });
+
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -70,17 +63,17 @@ app.get('/api/test-email', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// Graceful shutdown
-/*process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully.');
-  server.close(() => {
-    console.log('Server closed.');
-    mongoose.connection.close(false, () => {
-      console.log('MongoDB connection closed.');
-      process.exit(0);
+const PORT = process.env.PORT;
+const DBURL = process.env.MONGO_URI;
+
+mongoose.connect(DBURL)
+    .then(() => {
+        console.log('Database connected successfully');
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.log('Error:', error.message);
     });
-  });
-});*/
